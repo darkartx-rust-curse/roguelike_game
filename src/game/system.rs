@@ -1,6 +1,13 @@
-use bevy::prelude::{Commands, Query, With};
+use bevy::prelude::{Commands, Query, With, ResMut};
 
-use crate::component::*;
+use crate::{resource::*, component::*, map_generator::{Generator, NoisyGenerator}};
+
+pub(super) fn generate_map(mut commands: Commands, mut rnd: ResMut<DiceBox>) {
+    let mut map_generator = NoisyGenerator::new((80, 50).into(), &mut rnd);
+    let map = map_generator.generate();
+
+    commands.spawn(map);
+}
 
 pub(super) fn spawn_player(mut commands: Commands) {
     commands.spawn(PlayerBundle::new((40, 40).into()));

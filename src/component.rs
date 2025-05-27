@@ -1,4 +1,6 @@
-use bevy::prelude::{Component, IVec2, Bundle};
+use bevy::prelude::{Bundle, Component, IVec2};
+
+pub use crate::map::Map;
 
 // Компонент указывающий позицию в мире всего что имеет почицию
 // Игрока, Врагов, Тайлы карты

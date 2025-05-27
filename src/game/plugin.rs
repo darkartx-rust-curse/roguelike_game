@@ -1,7 +1,7 @@
-use bevy::{ecs::schedule::IntoScheduleConfigs, prelude::{App, Plugin as BevyPlugin, Startup, Update}};
+use bevy::prelude::{*, Plugin as BevyPlugin};
 
 use super::system::*;
-use crate::resource::*;
+use crate::{resource::*, event::*};
 
 pub struct Plugin;
 
@@ -9,8 +9,8 @@ impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
         app
             .insert_resource(DiceBox::default())
-            .add_systems(Startup, (generate_map, (spawn_player, /* spawn_enemies */)).chain())
-            .add_systems(Update, left_walker)
+            .add_event::<PlayerSpawnedEvent>()
+            .add_systems(Startup, (generate_map, (spawn_player)).chain())
         ;
     }
 }

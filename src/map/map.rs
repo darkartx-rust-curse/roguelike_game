@@ -1,4 +1,8 @@
 use bevy::prelude::{Component, UVec2};
+use bracket_algorithm_traits::prelude::*;
+use bracket_pathfinding::prelude::*;
+
+use super::utils::*;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -13,6 +17,22 @@ pub struct Map {
     size: UVec2,
     tiles: Vec<MapTile>,
     player_spawn_point: UVec2,
+}
+
+impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        match self.tiles.get(idx) {
+            None => true,
+            Some(MapTile::Wall | MapTile::Void) => true,
+            _ => false
+        }
+    }
+}
+
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        self.size.to_point()
+    }
 }
 
 impl Map {
@@ -54,12 +74,34 @@ impl Map {
     pub fn set_player_spawn_point(&mut self, player_spawn_point: UVec2) {
         self.player_spawn_point = player_spawn_point;
     }
+
+    pub fn make_revealed_map(&self) -> RevealedMap {
+        RevealedMap::new(self.size)
+    }
 }
 
 #[derive(Debug, Clone, Component)]
-pub struct Viewshed {
-    range: u32,
-    visible_tiles: Vec<MapTile>,
+pub struct RevealedMap {
+    size: UVec2,
+    tiles: Vec<MapTile>,
+}
+
+impl RevealedMap {
+    pub fn new(size: UVec2) -> Self {
+        let tiles = vec![MapTile::Floor; (size.x * size.y) as usize];
+
+        Self { size, tiles }
+    }
+
+    pub fn tile(&self, position: UVec2) -> MapTile {
+        *self.tiles.get(position_to_index(position, self.size)).unwrap()
+    }
+
+    pub(super) fn set_tile(&mut self, position: UVec2, tile: MapTile) {
+        let index = position_to_index(position, self.size);
+
+        *self.tiles.get_mut(index).unwrap() = tile
+    }
 }
 
 fn position_to_index(position: UVec2, size: UVec2) -> usize {

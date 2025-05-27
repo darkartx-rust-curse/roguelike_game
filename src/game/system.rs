@@ -1,6 +1,11 @@
-use bevy::prelude::{Commands, Query, With, ResMut};
+use bevy::prelude::{Commands, Query, ResMut, EventWriter};
 
-use crate::{component::*, map_generator::*, resource::*};
+use crate::{
+    event::PlayerSpawnedEvent,
+    component::*,
+    map::{Map, generator::*},
+    resource::*
+};
 
 pub(super) fn generate_map(mut commands: Commands, mut rnd: ResMut<DiceBox>) {
     // let mut map_generator = NoisyGenerator::new((80, 50).into(), &mut rnd);
@@ -16,21 +21,9 @@ pub(super) fn generate_map(mut commands: Commands, mut rnd: ResMut<DiceBox>) {
     commands.spawn(map);
 }
 
-pub(super) fn spawn_player(mut commands: Commands, map: Query<&Map>) {
+pub(super) fn spawn_player(mut commands: Commands, map: Query<&Map>, mut player_swpaned_event: EventWriter<PlayerSpawnedEvent>) {
     let map = map.single().unwrap();
 
-    commands.spawn(PlayerBundle::new(map.player_spawn_point().into()));
-}
-
-pub(super) fn spawn_enemies(mut commands: Commands) {
-    for i in 0..10 {
-        commands.spawn(EnemyBundle::new((i * 7, 20).into()));
-    }
-}
-
-pub(super) fn left_walker(entities: Query<&mut Position, With<LeftMover>>) {
-    for mut position in entities {
-        position.0.x -= 1;
-        if position.0.x < 0 { position.0.x = 79; }
-    }
+    let entity = commands.spawn(PlayerBundle::new(map.player_spawn_point().into(), 6));
+    player_swpaned_event.write(PlayerSpawnedEvent(entity.id()));
 }

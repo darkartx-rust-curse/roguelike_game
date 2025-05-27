@@ -1,6 +1,7 @@
 use bevy::prelude::{Bundle, Component, UVec2};
 
-pub use crate::map::Map;
+use crate::map::viewshed;
+pub use crate::map::{Map, Viewshed};
 
 // Компонент указывающий позицию в мире всего что имеет почицию
 // Игрока, Врагов, Тайлы карты
@@ -33,30 +34,14 @@ pub struct Player;
 #[derive(Debug, Bundle)]
 pub struct PlayerBundle {
     pub player: Player,
-    pub position: Position
+    pub position: Position,
+    pub viewshed: Viewshed,
 }
 
 impl PlayerBundle {
-    pub fn new(position: Position) -> Self {
-        Self { player: Player, position }
+    pub fn new(position: Position, viewshed_range: u32) -> Self {
+        let viewshed = Viewshed::new(viewshed_range);
+
+        Self { player: Player, position, viewshed }
     }
 }
-
-#[derive(Debug, Component)]
-pub struct Enemy;
-
-#[derive(Debug, Bundle)]
-pub struct EnemyBundle {
-    pub enemy: Enemy,
-    pub position: Position,
-    pub left_mover: LeftMover
-}
-
-impl EnemyBundle {
-    pub fn new(position: Position) -> Self {
-        Self { enemy: Enemy, position, left_mover: LeftMover }
-    }
-}
-
-#[derive(Debug, Component)]
-pub struct LeftMover;

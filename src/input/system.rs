@@ -1,4 +1,4 @@
-use bevy::prelude::{ResMut, ButtonInput, KeyCode, Query, With, IVec2};
+use bevy::prelude::{ResMut, ButtonInput, KeyCode, Query, With, IVec2, UVec2};
 
 use crate::{
     component::{Position, Player},
@@ -37,10 +37,10 @@ fn try_move_player(player: &mut Position, delta: IVec2, map: &Map) {
     let min_point = IVec2::ZERO;
     let max_point = map.size().as_ivec2();
 
-    let new_position = (player.0 + delta).min(max_point).max(min_point);
+    let new_position = (player.0.as_ivec2() + delta).min(max_point).max(min_point);
     
     match map.tile(new_position.as_uvec2()) {
-        MapTile::Floor => { player.0 = new_position }
+        MapTile::Floor => { player.0 = new_position.as_uvec2() }
         _ => {}
     }
 

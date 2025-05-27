@@ -1,26 +1,26 @@
-use bevy::prelude::{Bundle, Component, IVec2};
+use bevy::prelude::{Bundle, Component, UVec2};
 
 pub use crate::map::Map;
 
 // Компонент указывающий позицию в мире всего что имеет почицию
 // Игрока, Врагов, Тайлы карты
 #[derive(Debug, Clone, Copy, Component)]
-pub struct Position(pub IVec2);
+pub struct Position(pub UVec2);
 
-impl From<IVec2> for Position {
-    fn from(value: IVec2) -> Self {
+impl From<UVec2> for Position {
+    fn from(value: UVec2) -> Self {
         Self(value)
     }
 }
 
-impl From<[i32; 2]> for Position {
-    fn from(value: [i32; 2]) -> Self {
+impl From<[u32; 2]> for Position {
+    fn from(value: [u32; 2]) -> Self {
         Self(value.into())
     }
 }
 
-impl From<(i32, i32)> for Position {
-    fn from(value: (i32, i32)) -> Self {
+impl From<(u32, u32)> for Position {
+    fn from(value: (u32, u32)) -> Self {
         Self(value.into())
     }
 }

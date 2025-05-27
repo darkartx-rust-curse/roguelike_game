@@ -20,7 +20,7 @@ impl<'a> NoisyGenerator<'a> {
 
 impl Generator for NoisyGenerator<'_> {
     fn generate(&mut self) -> Map {
-        let mut map = Map::with_size(self.size);
+        let mut map = Map::with_tile(self.size, MapTile::Floor);
 
         for x in 0..map.size().x {
             map.set_tile((x, 0).into(), MapTile::Wall);

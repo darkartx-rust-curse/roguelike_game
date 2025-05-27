@@ -32,6 +32,7 @@ impl ToTile for Enemy {
 impl ToTile for MapTile {
     fn to_tile(&self) -> Tile {
         let glyph = match self {
+            MapTile::Void => '.',
             MapTile::Floor => ' ',
             MapTile::Wall => '#',
         };

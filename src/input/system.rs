@@ -10,6 +10,7 @@ pub(super) fn player_input(
     keyboard_input: ResMut<ButtonInput<KeyCode>>,
     mut player: Query<&mut Position, With<Player>>,
     map: Query<&Map>,
+    turn_state: Res<State<TurnState>>,
     mut next_turn_state: ResMut<NextState<TurnState>>
 ) {
     let mut player = match player.single_mut() {
@@ -38,7 +39,7 @@ pub(super) fn player_input(
             try_move_player(player.as_mut(), player_delta, map);
         }
 
-        next_turn_state.set(TurnState::EndTurn)
+        next_turn_state.set(TurnState::next(**turn_state))
     }
 }
 

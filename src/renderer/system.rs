@@ -2,7 +2,7 @@ use bevy::prelude::{Query, With};
 use bevy_ascii_terminal::Terminal;
 
 use crate::{
-    component::{Player, Position},
+    component::{Player, Position, Enemy},
     map::{Map, Viewshed, RevealedMap}
 };
 
@@ -20,7 +20,7 @@ pub(super) fn clear(mut terminal: Query<&mut Terminal>) {
 pub(super) fn render_map(
     mut terminal: Query<&mut Terminal>,
     map: Query<&Map>,
-    player_map: Query<(&Viewshed, Option<&RevealedMap>), With<Player>>
+    player_map: Query<(&Viewshed, &RevealedMap), With<Player>>
 ) {
     let mut terminal = match terminal.single_mut() {
         Ok(terminal) => terminal,
@@ -41,16 +41,12 @@ pub(super) fn render_map(
             let visible = player_viewshed.visible_tiles().contains(&position);
 
             let map_tile = if visible {
-                Some(map.tile(position))
+                map.tile(position)
             } else {
-                player_revealed_map.map(|map| map.tile(position))
+                player_revealed_map.tile(position)
             };
 
-            let tile = map_tile.map(|map_tile| map_tile.to_tile(visible));
-            
-            if let Some(tile) = tile {
-                terminal.put_tile(position, tile);
-            }
+            terminal.put_tile(position, map_tile.to_tile(visible));
         }
     }
 }
@@ -63,6 +59,32 @@ pub(super) fn render_player(mut terminal: Query<&mut Terminal>, player: Query<(&
 
     for (player, position) in player {
         let tile = player.to_tile(true);
+
+        terminal.put_tile(position.0, tile);
+    }
+}
+
+// Рендерим монстров только тех, которых видим
+pub(super) fn render_enemies(
+    mut terminal: Query<&mut Terminal>,
+    enemies: Query<(&Enemy, &Position)>,
+    player_viewshed: Query<&Viewshed, With<Player>>
+) {
+    let mut terminal = match terminal.single_mut() {
+        Ok(terminal) => terminal,
+        _ => { return }
+    };
+
+    let player_viewshed = match player_viewshed.single() {
+        Ok(player_viewshed) => player_viewshed,
+        _ => return
+    };
+
+    let enemies = enemies.iter()
+        .filter(|(_, position)| player_viewshed.visible_tiles().contains(&position.0));
+
+    for (enemy, position) in enemies {
+        let tile = enemy.to_tile(true);
 
         terminal.put_tile(position.0, tile);
     }

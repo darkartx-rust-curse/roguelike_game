@@ -6,3 +6,4 @@ pub mod map;
 pub mod random;
 pub mod resource;
 pub mod event;
+pub mod ai;

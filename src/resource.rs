@@ -7,5 +7,17 @@ pub enum TurnState {
     #[default]
     Setup,
     PlayerTurn,
+    EnemyTurn,
     EndTurn,
+}
+
+impl TurnState {
+    pub fn next(current: Self) -> Self {
+        match current {
+            Self::Setup => Self::Setup,
+            Self::PlayerTurn => Self::EnemyTurn,
+            Self::EnemyTurn => Self::EndTurn,
+            Self::EndTurn => Self::EndTurn,
+        }
+    }
 }

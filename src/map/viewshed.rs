@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, UVec2};
+use bevy::prelude::*;
 use bracket_pathfinding::prelude::field_of_view;
 
 use super::{utils::*, Map};
@@ -27,12 +27,17 @@ impl Viewshed {
     pub(super) fn recalculate(&mut self, map: &Map, position: UVec2) {
         self.clear();
 
-        self.visible_tiles = field_of_view(
+        let map_rect = URect::from_corners(UVec2::ZERO, map.size());
+
+        let visible_tiles = field_of_view(
             position.to_point(),
             self.range as i32,
             map
-        )
-            .iter()
-            .map(|point| point.to_uvec2()).collect();
+        );
+
+        self.visible_tiles = visible_tiles.iter()
+            .map(|point| point.to_uvec2())
+            .filter(|point| map_rect.contains(*point))
+            .collect();
     }
 }

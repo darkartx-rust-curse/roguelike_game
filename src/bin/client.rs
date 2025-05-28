@@ -6,6 +6,7 @@ use roguelike_game::{
     game::Plugin as GamePlugin,
     input::Plugin as InputPlugin,
     map::Plugin as MapPlugin,
+    ai::Plugin as AiPlugin
 };
 
 const APP_NAME: &str = env!("CARGO_PKG_NAME");
@@ -31,7 +32,7 @@ fn main() {
             )
         )
         .add_plugins((ScreenDiagnosticsPlugin::default(), ScreenFrameDiagnosticsPlugin))
-        .add_plugins((GamePlugin, RendererPlugin, InputPlugin, MapPlugin))
+        .add_plugins((GamePlugin, RendererPlugin, InputPlugin, MapPlugin, AiPlugin))
         .run()
     ;
 }

@@ -12,7 +12,7 @@ impl BevyPlugin for Plugin {
         app
             .add_plugins(TerminalPlugins)
             .add_systems(Startup, setup)
-            .add_systems(Update, (clear, render_map, render_player).chain())
+            .add_systems(Update, (clear, render_map, render_enemies, render_player).chain())
         ;
     }
 }

@@ -15,7 +15,8 @@ impl BevyPlugin for Plugin {
             .insert_resource(TurnTimer::new(TURN_MIN_TIME_SECS))
             .init_state::<TurnState>()
             .add_event::<PlayerSpawnedEvent>()
-            .add_systems(Startup, (generate_map, (spawn_player, turn_start)).chain())
+            .add_event::<EnemySpawnedEvent>()
+            .add_systems(Startup, (generate_map, (spawn_player, spawn_enemies, turn_start)).chain())
             .add_systems(Update, (turn_delay).run_if(in_state(TurnState::EndTurn)))
         ;
     }

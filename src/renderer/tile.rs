@@ -1,7 +1,7 @@
 use bevy_ascii_terminal::{color::*,Tile};
 
 use crate::{
-    component::{Player},
+    component::{Player, Enemy},
     map::MapTile
 };
 
@@ -40,5 +40,17 @@ impl ToTile for MapTile {
                 }
             }
         }
+    }
+}
+
+impl ToTile for Enemy {
+    fn to_tile(&self, _visible: bool) -> Tile {
+        let glyph = self.name().chars().next().unwrap_or('e');
+
+        Tile::new(
+            glyph,
+            color::ENEMY_FG,
+            color::ENEMY_BG
+        )
     }
 }

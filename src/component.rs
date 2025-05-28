@@ -1,6 +1,5 @@
 use bevy::prelude::{Bundle, Component, UVec2};
 
-use crate::map::viewshed;
 pub use crate::map::{Map, Viewshed};
 
 // Компонент указывающий позицию в мире всего что имеет почицию

@@ -1,8 +1,4 @@
-use bevy_ascii_terminal::{
-    color::*,
-    Glyph,
-    Tile
-};
+use bevy_ascii_terminal::{color::*,Tile};
 
 use crate::{
     component::{Player},

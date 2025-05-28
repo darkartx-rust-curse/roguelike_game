@@ -17,8 +17,7 @@ pub(super) fn visablity_system(viewsheds: Query<(&Position, &mut Viewshed, Optio
 
         if let Some(mut revealed_map) = revealed_map {
             for visible_tile in viewshed.visible_tiles() {
-                let tile = map.tile(*visible_tile);
-                revealed_map.set_tile(position.0, tile);
+                revealed_map.set_tile(*visible_tile, map.tile(*visible_tile));
             }
         }
     }

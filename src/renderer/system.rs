@@ -43,8 +43,7 @@ pub(super) fn render_map(
             let map_tile = if visible {
                 Some(map.tile(position))
             } else {
-                // player_revealed_map.map(|map| map.tile(position))
-                Some(map.tile(position))
+                player_revealed_map.map(|map| map.tile(position))
             };
 
             let tile = map_tile.map(|map_tile| map_tile.to_tile(visible));

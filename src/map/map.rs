@@ -17,6 +17,7 @@ pub struct Map {
     size: UVec2,
     tiles: Vec<MapTile>,
     player_spawn_point: UVec2,
+    monster_spawn_points: Vec<UVec2>
 }
 
 impl BaseMap for Map {
@@ -39,7 +40,7 @@ impl Map {
     pub fn new(size: UVec2, tiles: Vec<MapTile>) -> Self {
         assert_eq!(tiles.len(), (size.x * size.y) as usize, "Map size not equal tiles size");
 
-        Self { size, tiles, player_spawn_point: UVec2::ZERO }
+        Self { size, tiles, player_spawn_point: UVec2::ZERO, monster_spawn_points: Vec::new() }
     }
 
     pub fn with_tile(size: UVec2, tile: MapTile) -> Self {
@@ -75,6 +76,14 @@ impl Map {
         self.player_spawn_point = player_spawn_point;
     }
 
+    pub fn monster_spawn_points(&self) -> &[UVec2] {
+        &self.monster_spawn_points
+    }
+
+    pub fn monster_spawn_points_mut(&mut self) -> &mut Vec<UVec2> {
+        &mut self.monster_spawn_points
+    }
+
     pub fn make_revealed_map(&self) -> RevealedMap {
         RevealedMap::new(self.size)
     }
@@ -88,7 +97,7 @@ pub struct RevealedMap {
 
 impl RevealedMap {
     pub fn new(size: UVec2) -> Self {
-        let tiles = vec![MapTile::Floor; (size.x * size.y) as usize];
+        let tiles = vec![MapTile::Void; (size.x * size.y) as usize];
 
         Self { size, tiles }
     }

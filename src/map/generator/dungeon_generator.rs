@@ -69,12 +69,15 @@ impl Generator for DungeonGenerator<'_> {
 
         map.set_player_spawn_point(rooms.first().unwrap().center());
 
+        for room in rooms.iter().skip(1) {
+            map.monster_spawn_points_mut().push(room.center());
+        }
+
         map
     }
 }
 
 fn apply_room_to_map(map: &mut Map, room: URect) {
-
     for y in room.min.y + 1..room.max.y {
         for x in room.min.x + 1..room.max.x {
             map.set_tile((x, y).into(), MapTile::Floor);

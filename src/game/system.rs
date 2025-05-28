@@ -1,4 +1,4 @@
-use bevy::prelude::{Commands, Query, ResMut, EventWriter};
+use bevy::prelude::*;
 
 use crate::{
     event::PlayerSpawnedEvent,
@@ -6,6 +6,8 @@ use crate::{
     map::{Map, generator::*},
     resource::*
 };
+
+use super::resource::*;
 
 pub(super) fn generate_map(mut commands: Commands, mut rnd: ResMut<DiceBox>) {
     // let mut map_generator = NoisyGenerator::new((80, 50).into(), &mut rnd);
@@ -26,4 +28,21 @@ pub(super) fn spawn_player(mut commands: Commands, map: Query<&Map>, mut player_
 
     let entity = commands.spawn(PlayerBundle::new(map.player_spawn_point().into(), 6));
     player_swpaned_event.write(PlayerSpawnedEvent(entity.id()));
+}
+
+pub(super) fn turn_delay(
+    time: Res<Time>,
+    mut turn_timer: ResMut<TurnTimer>,
+    mut next_turn_state: ResMut<NextState<TurnState>>
+) {
+    turn_timer.tick(time.delta());
+
+    if turn_timer.finished() {
+        next_turn_state.set(TurnState::PlayerTurn);
+        turn_timer.reset();
+    }
+}
+
+pub(super) fn turn_start(mut next_turn_state: ResMut<NextState<TurnState>>) {
+    next_turn_state.set(TurnState::PlayerTurn);
 }

@@ -1,23 +1,28 @@
-use bevy::prelude::{ResMut, ButtonInput, KeyCode, Query, With, IVec2, UVec2};
+use bevy::prelude::*;
 
 use crate::{
     component::{Position, Player},
-    map::{Map, MapTile}
+    map::{Map, MapTile},
+    resource::TurnState,
 };
 
 pub(super) fn player_input(
     keyboard_input: ResMut<ButtonInput<KeyCode>>,
     mut player: Query<&mut Position, With<Player>>,
     map: Query<&Map>,
+    mut next_turn_state: ResMut<NextState<TurnState>>
 ) {
-    let key = keyboard_input.get_pressed().next().cloned();
-    let mut player = player.single_mut().unwrap();
-    let map = map.single().unwrap();
+    let mut player = match player.single_mut() {
+        Ok(player) => player,
+        _ => return,
+    };
 
-    let mut player_delta = IVec2::ZERO;
+    let key = keyboard_input.get_pressed().next().cloned();
 
     if let Some(key) = key {
-        log::debug!("Key pressed: {key:?}");
+        // log::debug!("Key pressed: {key:?}");
+
+        let mut player_delta = IVec2::ZERO;
 
         match key {
             KeyCode::ArrowRight => { player_delta.x += 1 }
@@ -26,10 +31,14 @@ pub(super) fn player_input(
             KeyCode::ArrowUp => { player_delta.y += 1 }
             _ => {}
         }
-    }
 
-    if player_delta != IVec2::ZERO {
-        try_move_player(player.as_mut(), player_delta, map);
+        if player_delta != IVec2::ZERO {
+            let map = map.single().unwrap();
+
+            try_move_player(player.as_mut(), player_delta, map);
+        }
+
+        next_turn_state.set(TurnState::EndTurn)
     }
 }
 
@@ -43,7 +52,4 @@ fn try_move_player(player: &mut Position, delta: IVec2, map: &Map) {
         MapTile::Floor => { player.0 = new_position.as_uvec2() }
         _ => {}
     }
-
-    log::debug!("New position: {:?}", player.0)
-
 }

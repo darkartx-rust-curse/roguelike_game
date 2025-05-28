@@ -3,6 +3,8 @@ use bracket_pathfinding::prelude::field_of_view;
 
 use super::{utils::*, Map};
 
+// Видимость сущности
+// Для просчета видимости используется bracket-pathfinding
 #[derive(Debug, Clone, Component)]
 pub struct Viewshed {
     range: u32,

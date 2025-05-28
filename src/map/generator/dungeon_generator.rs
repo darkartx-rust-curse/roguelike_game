@@ -9,6 +9,7 @@ use crate::{
 
 use super::Generator;
 
+// Генератор карты подземелья
 pub struct DungeonGenerator<'a> {
     size: UVec2,
     max_rooms: u32,
@@ -18,7 +19,13 @@ pub struct DungeonGenerator<'a> {
 }
 
 impl<'a> DungeonGenerator<'a> {
-    pub fn new(size: UVec2, max_rooms: u32, min_room_size: u32, max_room_size: u32, rnd: &'a mut DiceBox) -> Self {
+    pub fn new(
+        size: UVec2,
+        max_rooms: u32,
+        min_room_size: u32,
+        max_room_size: u32,
+        rnd: &'a mut DiceBox
+    ) -> Self {
         Self { size, max_rooms, min_room_size, max_room_size, rnd }
     }
 }

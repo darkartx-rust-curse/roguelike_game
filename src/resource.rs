@@ -6,15 +6,17 @@ pub use crate::random::*;
 pub enum TurnState {
     #[default]
     Setup,
+    StartTurn,
     PlayerTurn,
     EnemyTurn,
     EndTurn,
 }
 
 impl TurnState {
-    pub fn next(current: Self) -> Self {
-        match current {
+    pub fn next(&self) -> Self {
+        match self {
             Self::Setup => Self::Setup,
+            Self::StartTurn => Self::PlayerTurn,
             Self::PlayerTurn => Self::EnemyTurn,
             Self::EnemyTurn => Self::EndTurn,
             Self::EndTurn => Self::EndTurn,

@@ -17,7 +17,8 @@ pub struct Map {
     size: UVec2,
     tiles: Vec<MapTile>,
     player_spawn_point: UVec2,
-    monster_spawn_points: Vec<UVec2>
+    monster_spawn_points: Vec<UVec2>,
+    blocking: Vec<bool>
 }
 
 impl BaseMap for Map {
@@ -38,7 +39,11 @@ impl BaseMap for Map {
             idx_position.with_x(idx_position.x - 1),
             idx_position.with_x(idx_position.x + 1),
             idx_position.with_y(idx_position.y - 1),
-            idx_position.with_y(idx_position.y + 1)
+            idx_position.with_y(idx_position.y + 1),
+            idx_position.with_x(idx_position.x - 1).with_y(idx_position.y - 1),
+            idx_position.with_x(idx_position.x - 1).with_y(idx_position.y + 1),
+            idx_position.with_x(idx_position.x + 1).with_y(idx_position.y - 1),
+            idx_position.with_x(idx_position.x + 1).with_y(idx_position.y + 1)
         ];
 
         for position in positions {
@@ -68,7 +73,15 @@ impl Map {
     pub fn new(size: UVec2, tiles: Vec<MapTile>) -> Self {
         assert_eq!(tiles.len(), (size.x * size.y) as usize, "Map size not equal tiles size");
 
-        Self { size, tiles, player_spawn_point: UVec2::ZERO, monster_spawn_points: Vec::new() }
+        let blocking = vec![false; tiles.len()];
+
+        Self {
+            size,
+            tiles,
+            player_spawn_point: UVec2::ZERO,
+            monster_spawn_points: Vec::new(),
+            blocking
+        }
     }
 
     pub fn with_tile(size: UVec2, tile: MapTile) -> Self {
@@ -82,6 +95,10 @@ impl Map {
         &self.tiles
     }
 
+    pub fn blocking(&self) -> &[bool] {
+        &self.blocking
+    }
+
     pub fn size(&self) -> UVec2 {
         self.size
     }
@@ -91,13 +108,39 @@ impl Map {
     }
 
     pub fn tile(&self, position: UVec2) -> MapTile {
-        *self.tiles.get(position_to_index(position, self.size)).unwrap()
-    }
-
-    pub fn set_tile(&mut self, position: UVec2, tile: MapTile) {
         let index = position_to_index(position, self.size);
 
-        *self.tiles.get_mut(index).unwrap() = tile
+        match self.tiles.get(index) {
+            Some(tile) => *tile,
+            _ => MapTile::Void
+        }
+    }
+
+    pub fn set_tile(&mut self, position: UVec2, value: MapTile) {
+        let index = position_to_index(position, self.size);
+
+        match self.tiles.get_mut(index) {
+            Some(tile) => { *tile = value; }
+            _ => {}
+        };
+    }
+
+    pub fn blocked(&self, position: UVec2) -> bool {
+        let index = position_to_index(position, self.size);
+        
+        match self.blocking.get(index) {
+            Some(blocked) => *blocked,
+            _ => true
+        }
+    }
+
+    pub fn set_blocked(&mut self, position: UVec2, value: bool) {
+        let index = position_to_index(position, self.size);
+
+        match self.blocking.get_mut(index) {
+            Some(blocked) => { *blocked = value; }
+            _ => {}
+        };
     }
 
     pub fn player_spawn_point(&self) -> UVec2 {
@@ -120,17 +163,28 @@ impl Map {
         RevealedMap::new(self.size)
     }
 
+    pub(super) fn clear_blocking(&mut self) {
+        self.blocking.fill(false);
+    }
+
+    pub(super) fn populate_blocking(&mut self) {
+        self.clear_blocking();
+
+        for (i, tile) in self.tiles.iter().enumerate() {
+            self.blocking[i] = match tile {
+                MapTile::Floor => false,
+                _ => true,
+            }
+        }
+    }
+
     fn is_exit_valid(&self, position: IVec2) -> bool {
         if position.x < 0 || position.y < 0 || !self.rect().contains(position.as_uvec2()) {
             return false;
         }
 
         let idx = position_to_index(position.as_uvec2(), self.size);
-
-        match self.tiles.get(idx) {
-            Some(MapTile::Floor) => true,
-            _ => false
-        }
+        !self.blocking.get(idx).copied().unwrap_or(true)
     }
 }
 

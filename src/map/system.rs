@@ -1,15 +1,12 @@
-use bevy::prelude::{Query, EventReader, Commands};
+use bevy::prelude::*;
 
-use crate::{
-    component::Position,
-    event::PlayerSpawnedEvent,
-};
+use crate::component::{BlocksTile, Position};
 use super::{Map, Viewshed, RevealedMap};
 
 pub(super) fn visablity_system(viewsheds: Query<(&Position, &mut Viewshed, Option<&mut RevealedMap>)>, map: Query<&Map>) {
     let map = match map.single() {
         Ok(map) => map,
-        _ => { return }
+        _ => return
     };
 
     for (position, mut viewshed, revealed_map) in viewsheds {
@@ -23,18 +20,18 @@ pub(super) fn visablity_system(viewsheds: Query<(&Position, &mut Viewshed, Optio
     }
 }
 
-pub(super) fn setup_entity(
-    mut commands: Commands,
-    mut player_spawned_event: EventReader<PlayerSpawnedEvent>,
-    map: Query<&Map>
+pub(super) fn update_blocking(
+    mut map: Query<&mut Map>,
+    blocks_tiles: Query<&Position, With<BlocksTile>>
 ) {
-    let map = match map.single() {
+    let mut map = match map.single_mut() {
         Ok(map) => map,
-        _ => { return }
+        _ => return
     };
 
-    for event in player_spawned_event.read() {
-        let player = event.0;
-        commands.entity(player).insert(map.make_revealed_map());
+    map.populate_blocking();
+
+    for position in blocks_tiles {
+        map.set_blocked(position.0, true);
     }
 }

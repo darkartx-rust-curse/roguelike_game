@@ -8,7 +8,7 @@ pub struct Plugin;
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, (enemy_ai).run_if(in_state(TurnState::EnemyTurn)))
+            .add_systems(OnEnter(TurnState::EnemyTurn), enemy_ai)
         ;
     }
 }

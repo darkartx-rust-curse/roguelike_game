@@ -1,10 +1,7 @@
 use bevy::prelude::{*, Plugin as BevyPlugin};
 
 use crate::{resource::*, event::*};
-use super::{resource::*, system::*};
-
-// Минимальное время цикла одного хода
-const TURN_MIN_TIME_SECS: f32 = 0.1;
+use super::{TURN_MIN_TIME_SECS, resource::*, system::*};
 
 pub struct Plugin;
 
@@ -16,8 +13,9 @@ impl BevyPlugin for Plugin {
             .init_state::<TurnState>()
             .add_event::<PlayerSpawnedEvent>()
             .add_event::<EnemySpawnedEvent>()
-            .add_systems(Startup, (generate_map, (spawn_player, spawn_enemies, turn_start)).chain())
-            .add_systems(Update, (turn_delay).run_if(in_state(TurnState::EndTurn)))
+            .add_systems(Startup, (generate_map, (spawn_player, spawn_enemies, start_turn)).chain())
+            .add_systems(Update, turn_system)
+            .add_systems(OnExit(TurnState::PlayerTurn), player_movement)
         ;
     }
 }

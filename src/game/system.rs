@@ -67,21 +67,81 @@ pub(super) fn spawn_enemies(
     }
 }
 
-pub(super) fn turn_delay(
+pub(super) fn turn_system(
     time: Res<Time>,
     mut turn_timer: ResMut<TurnTimer>,
+    turn_state: Res<State<TurnState>>,
     mut next_turn_state: ResMut<NextState<TurnState>>
 ) {
     turn_timer.tick(time.delta());
+    let turn_state = *turn_state.get();
 
-    if turn_timer.finished() {
-        next_turn_state.set(TurnState::PlayerTurn);
-        turn_timer.reset();
+    let next_turn = match turn_state {
+        TurnState::Setup => None,
+        TurnState::StartTurn => {
+            turn_timer.reset();
+            Some(turn_state.next())
+        }
+        TurnState::PlayerTurn => {
+            if turn_timer.finished() {
+                turn_timer.reset();
+                Some(turn_state.next())
+            } else {
+                None
+            }
+        },
+        TurnState::EnemyTurn => Some(turn_state.next()),
+        TurnState::EndTurn => Some(TurnState::StartTurn),
+    };
+
+    if let Some(next_turn) = next_turn {
+        next_turn_state.set(next_turn);
     }
 }
 
-pub(super) fn turn_start(mut next_turn_state: ResMut<NextState<TurnState>>) {
-    next_turn_state.set(TurnState::PlayerTurn);
+pub(super) fn start_turn(mut next_turn_state: ResMut<NextState<TurnState>>) {
+    next_turn_state.set(TurnState::StartTurn);
+}
+
+pub(super) fn player_movement(map: Query<&Map>, players: Query<(&mut Position, &mut PlayerCommand)>) {
+    let map = match map.single() {
+        Ok(map) => map,
+        _ => return
+    };
+
+    use PlayerCommand::*;
+
+    for (mut position, mut command) in players {
+        let mut player_delta = IVec2::ZERO;
+
+        match command.as_ref() {
+            MoveUp | MoveUpLeft | MoveUpRight => { player_delta.y += 1; }
+            MoveDown | MoveDownLeft | MoveDownRight => { player_delta.y -= 1; }
+            _ => { }
+        }
+
+        match command.as_ref() {
+            MoveRight | MoveDownRight | MoveUpRight => { player_delta.x += 1; }
+            MoveLeft | MoveDownLeft | MoveUpLeft => { player_delta.x -= 1; }
+            _ => { }
+        }
+
+        if player_delta != IVec2::ZERO {
+            *command = PlayerCommand::default();
+
+            let min_point = IVec2::ZERO;
+            let max_point = map.size().as_ivec2();
+
+            let new_position = (position.0.as_ivec2() + player_delta)
+                .min(max_point)
+                .max(min_point)
+                .as_uvec2();
+
+            if !map.blocked(new_position) {
+                position.0 = new_position;
+            }
+        }
+    }
 }
 
 fn enemy_randomizer(rnd: &mut DiceBox) -> Enemy {

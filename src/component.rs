@@ -45,14 +45,29 @@ pub struct PlayerBundle {
     pub player: Player,
     pub position: Position,
     pub viewshed: Viewshed,
-    pub revealed_map: RevealedMap
+    pub revealed_map: RevealedMap,
+    pub player_command: PlayerCommand,
+    pub max_health: MaxHelth,
+    pub health: Health,
+    pub defence: Defence,
+    pub power: Power,
 }
 
 impl PlayerBundle {
     pub fn new(position: Position, viewshed_range: u32, revealed_map: RevealedMap) -> Self {
         let viewshed = Viewshed::new(viewshed_range);
 
-        Self { player: Player, position, viewshed, revealed_map }
+        Self {
+            player: Player,
+            position,
+            viewshed,
+            revealed_map,
+            player_command: PlayerCommand::default(),
+            max_health: MaxHelth(30),
+            health: Health(30),
+            defence: Defence(2),
+            power: Power(5)
+        }
     }
 }
 
@@ -80,6 +95,11 @@ pub struct EnemyBundle {
     pub name: Name,
     pub position: Position,
     pub viewshed: Viewshed,
+    pub blocks_tile: BlocksTile,
+    pub max_health: MaxHelth,
+    pub health: Health,
+    pub defence: Defence,
+    pub power: Power
 }
 
 impl EnemyBundle {
@@ -87,7 +107,17 @@ impl EnemyBundle {
         let viewshed = Viewshed::new(viewshed_range);
         let name = Name(enemy.name());
 
-        Self { enemy, position, viewshed, name }
+        Self {
+            enemy,
+            position,
+            viewshed,
+            name,
+            blocks_tile: BlocksTile,
+            max_health: MaxHelth(16),
+            health: Health(16),
+            defence: Defence(1),
+            power: Power(4)
+        }
     }
 
     pub fn with_name(mut self, name: Name) -> Self {
@@ -95,3 +125,32 @@ impl EnemyBundle {
         self
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Component)]
+pub enum PlayerCommand {
+    #[default]
+    None,
+    MoveUp,
+    MoveRight,
+    MoveDown,
+    MoveLeft,
+    MoveUpRight,
+    MoveUpLeft,
+    MoveDownRight,
+    MoveDownLeft,
+}
+
+#[derive(Debug, Component)]
+pub struct BlocksTile;
+
+#[derive(Debug, Component)]
+pub struct MaxHelth(pub u32);
+
+#[derive(Debug, Component)]
+pub struct Health(pub u32);
+
+#[derive(Debug, Component)]
+pub struct Defence(pub u32);
+
+#[derive(Debug, Component)]
+pub struct Power(pub u32);

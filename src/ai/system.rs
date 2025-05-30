@@ -2,23 +2,41 @@ use bevy::prelude::*;
 
 use crate::{
     component::{*, Name},
-    resource::TurnState
+    resource::TurnState,
+    map::Pathfinder,
 };
 
 pub(super) fn enemy_ai(
-    enemies: Query<(&Enemy, &Name, &Position, &Viewshed)>,
-    player: Query<&Position, With<Player>>,
+    map: Query<&Map>,
+    enemies: Query<(&mut Position, &Enemy, &Name, &Viewshed)>,
+    player: Query<&Position, (With<Player>, Without<Enemy>)>,
     turn_state: Res<State<TurnState>>,
     mut next_turn_state: ResMut<NextState<TurnState>>
 ) {
-    let player: Vec<UVec2> = player.iter().map(|position| position.0).collect();
+    let map = match map.single() {
+        Ok(map) => map,
+        _ => return,
+    };
 
-    for (_enemy, name, _position, viewshed) in enemies {
-        let see_player = player.iter()
-            .any(|player_position| viewshed.visible_tiles().contains(&player_position));
+    let pathfinder = Pathfinder::new(map);
 
-        if see_player {
+    for (mut position, _enemy, name, viewshed) in enemies {
+        let near_player = player.iter()
+            .find(|position| viewshed.visible_tiles().contains(&position.0));
+
+        if let Some(player) = near_player {
             log::debug!("{} see player", name.0);
+
+            let path_to_player = pathfinder.find_path(position.0, player.0);
+
+            let move_position = match path_to_player {
+                Some(path) => path.into_iter().skip(1).next(),
+                _ => None
+            };
+
+            if let Some(move_position) = move_position {
+                position.0 = move_position;
+            }
         }
     }
 

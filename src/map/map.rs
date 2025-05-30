@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, UVec2};
+use bevy::prelude::{Component, IVec2, UVec2, URect};
 use bracket_algorithm_traits::prelude::*;
 use bracket_pathfinding::prelude::*;
 
@@ -27,6 +27,34 @@ impl BaseMap for Map {
             Some(MapTile::Wall | MapTile::Void) => true,
             _ => false
         }
+    }
+
+    fn get_available_exits(&self, idx: usize) -> SmallVec<[(usize, f32); 10]> {
+        let mut exits = SmallVec::new();
+
+        let idx_position = index_to_position(idx, self.size).as_ivec2();
+
+        let positions = [
+            idx_position.with_x(idx_position.x - 1),
+            idx_position.with_x(idx_position.x + 1),
+            idx_position.with_y(idx_position.y - 1),
+            idx_position.with_y(idx_position.y + 1)
+        ];
+
+        for position in positions {
+            if self.is_exit_valid(position) {
+                exits.push((position_to_index(position.as_uvec2(), self.size), 1.0));
+            }
+        }
+
+        exits
+    }
+
+    fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
+        let position1 = index_to_position(idx1, self.size);
+        let position2 = index_to_position(idx2, self.size);
+
+        DistanceAlg::Pythagoras.distance2d(position1.to_point(), position2.to_point())
     }
 }
 
@@ -58,6 +86,10 @@ impl Map {
         self.size
     }
 
+    pub fn rect(&self) -> URect {
+        URect::from_corners(UVec2::ZERO, self.size)
+    }
+
     pub fn tile(&self, position: UVec2) -> MapTile {
         *self.tiles.get(position_to_index(position, self.size)).unwrap()
     }
@@ -87,6 +119,19 @@ impl Map {
     pub fn make_revealed_map(&self) -> RevealedMap {
         RevealedMap::new(self.size)
     }
+
+    fn is_exit_valid(&self, position: IVec2) -> bool {
+        if position.x < 0 || position.y < 0 || !self.rect().contains(position.as_uvec2()) {
+            return false;
+        }
+
+        let idx = position_to_index(position.as_uvec2(), self.size);
+
+        match self.tiles.get(idx) {
+            Some(MapTile::Floor) => true,
+            _ => false
+        }
+    }
 }
 
 #[derive(Debug, Clone, Component)]
@@ -111,10 +156,4 @@ impl RevealedMap {
 
         *self.tiles.get_mut(index).unwrap() = tile
     }
-}
-
-fn position_to_index(position: UVec2, size: UVec2) -> usize {
-    assert!(position.y <= size.y && position.x <= size.x, "Position out of size bounds");
-
-    (position.y * size.x + position.x) as usize
 }

@@ -27,7 +27,7 @@ impl Viewshed {
     pub(super) fn recalculate(&mut self, map: &Map, position: UVec2) {
         self.clear();
 
-        let map_rect = URect::from_corners(UVec2::ZERO, map.size());
+        let map_rect = map.rect();
 
         let visible_tiles = field_of_view(
             position.to_point(),

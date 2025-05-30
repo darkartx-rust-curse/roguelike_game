@@ -20,3 +20,18 @@ impl ToUVec2 for Point {
         UVec2 { x: self.x as u32, y: self.y as u32 }
     }
 }
+
+pub fn position_to_index(position: UVec2, size: UVec2) -> usize {
+    assert!(position.y <= size.y && position.x <= size.x, "Position out of size bounds");
+
+    (position.y * size.x + position.x) as usize
+}
+
+pub fn index_to_position(idx: usize, size: UVec2) -> UVec2 {
+    assert!(idx < (size.x * size.y) as usize, "Index out of size bounds");
+
+    let x = idx as u32 % size.x;
+    let y = idx as u32 / size.x;
+
+    (x, y).into()
+}

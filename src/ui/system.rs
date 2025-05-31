@@ -53,6 +53,6 @@ pub(super) fn draw_game_log(
             _ => break
         };
 
-        terminal.put_string([0, log_max_count - i - 1], format!("{log_entry}"));
+        terminal.put_string([0, log_max_count - i - 1], log_entry.to_string());
     }
 }

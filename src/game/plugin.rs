@@ -15,7 +15,8 @@ impl BevyPlugin for Plugin {
             .add_event::<EnemySpawnedEvent>()
             .add_systems(Startup, (generate_map, (spawn_player, spawn_enemies, start_turn)).chain())
             .add_systems(Update, turn_system)
-            .add_systems(OnExit(TurnState::PlayerTurn), player_movement)
+            .add_systems(OnExit(TurnState::PlayerTurn), process_player_commands)
+            .add_systems(OnEnter(TurnState::EndTurn), (movement_system, combat_system, damage_system).chain())
         ;
     }
 }

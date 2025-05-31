@@ -1,8 +1,10 @@
+use std::cmp;
+
 use bevy::prelude::*;
 
 use crate::{
     event::*,
-    component::*,
+    component::{*, Name},
     map::{Map, generator::*},
     resource::*
 };
@@ -103,43 +105,156 @@ pub(super) fn start_turn(mut next_turn_state: ResMut<NextState<TurnState>>) {
     next_turn_state.set(TurnState::StartTurn);
 }
 
-pub(super) fn player_movement(map: Query<&Map>, players: Query<(&mut Position, &mut PlayerCommand)>) {
-    let map = match map.single() {
-        Ok(map) => map,
-        _ => return
-    };
-
+pub(super) fn process_player_commands(
+    player_commands: Query<(Entity, &mut PlayerCommand, &mut CreatureIntention)>,
+    targets: Query<(Entity, &Position), With<Health>>
+) {
     use PlayerCommand::*;
 
-    for (mut position, mut command) in players {
+    for (entity, mut player_command, mut creature_intention) in player_commands {
+        let position = targets.iter().find(|(target_entity, _)| *target_entity == entity);
+        let position = match position {
+            Some((_, position)) => position,
+            _ => continue
+        };
         let mut player_delta = IVec2::ZERO;
 
-        match command.as_ref() {
+        match player_command.as_ref() {
             MoveUp | MoveUpLeft | MoveUpRight => { player_delta.y += 1; }
             MoveDown | MoveDownLeft | MoveDownRight => { player_delta.y -= 1; }
             _ => { }
         }
 
-        match command.as_ref() {
+        match player_command.as_ref() {
             MoveRight | MoveDownRight | MoveUpRight => { player_delta.x += 1; }
             MoveLeft | MoveDownLeft | MoveUpLeft => { player_delta.x -= 1; }
             _ => { }
         }
 
         if player_delta != IVec2::ZERO {
-            *command = PlayerCommand::default();
+            let target_position = (position.0.as_ivec2() + player_delta).as_uvec2();
+            let is_target = targets.iter()
+                .any(|(_, position)| position.0 == target_position);
 
-            let min_point = IVec2::ZERO;
-            let max_point = map.size().as_ivec2();
+            *creature_intention = if is_target {
+                CreatureIntention::Attack(target_position)
+            } else {
+                CreatureIntention::Move(target_position)
+            };
+        }
 
-            let new_position = (position.0.as_ivec2() + player_delta)
-                .min(max_point)
-                .max(min_point)
-                .as_uvec2();
+        *player_command = PlayerCommand::default();
+    }
+}
 
-            if !map.blocked(new_position) {
-                position.0 = new_position;
+pub(super) fn movement_system(
+    mut map: Query<&mut Map>,
+    mut creature_intentions: Query<(
+        &mut Position, &mut CreatureIntention
+    )>
+) {
+    let mut map = match map.single_mut() {
+        Ok(map) => map,
+        _ => return
+    };
+
+    let map_rect = map.rect();
+
+    let movement_intentions = creature_intentions.iter_mut()
+        .filter(|(_, intention)| intention.is_move());
+
+    for (mut position, mut intention) in movement_intentions {
+        let target_position = match *intention {
+            CreatureIntention::Move(target_position) => target_position,
+            _ => unreachable!()
+        };
+
+        *intention = CreatureIntention::default();
+        
+        let target_position = target_position.min(map_rect.max).max(map_rect.min);
+
+        if !map.blocked(target_position) {
+            map.set_blocked(target_position, true);
+            position.0 = target_position;
+        }
+    }
+}
+
+pub(super) fn combat_system(
+    mut attackers: Query<(&mut CreatureIntention, &Position, &Power, Option<&Name>)>,
+    mut targets: Query<(&Position, &mut Damages, Option<&Name>)>
+) {
+    let attackers = attackers.iter_mut()
+        .filter(|(intension, _, _, _)| intension.is_attack());
+
+    for (mut attack_intension, position, power, attacker_name) in attackers {
+        let attack_position = match *attack_intension {
+            CreatureIntention::Attack(attack_position) => attack_position,
+            _ => unreachable!()
+        };
+
+        *attack_intension = CreatureIntention::Nothing;
+
+        let attack_position_vec = attack_position.as_vec2();
+        let position_vec = position.0.as_vec2();
+
+        if position_vec.distance(attack_position_vec) > 1.5 {
+            continue;
+        }
+
+        let attacker_name = attacker_name.map(|name| name.0.as_str()).unwrap_or("Unknown");
+
+        for (target_position, mut damages, target_name) in targets.iter_mut() {
+            if target_position.0 != attack_position {
+                continue;
             }
+
+            let target_name = target_name
+                .map(|name| name.0.as_str()).unwrap_or("Unknown");
+
+            let damage = power.0;
+
+            log::debug!("{attacker_name} attacks {target_name} with {damage} damage");
+            damages.0.push(damage);
+        }
+    }
+}
+
+pub(super) fn damage_system(
+    mut commands: Commands,
+    creatures: Query<(Entity, &mut Health, &mut Damages, Option<&Defence>, Option<&Name>)>
+) {
+    for (entity, mut health, mut damages, defence, name) in creatures {
+        if damages.0.is_empty() {
+            continue;
+        }
+
+        let defence = defence.map(|defence| defence.0).unwrap_or(0);
+        let name = name.map(|name| name.0.as_str()).unwrap_or("Unknown");
+
+        let mut total_damage = 0u32;
+
+        damages.0.retain(|damage| {
+            let damage = if *damage > defence {
+                damage - defence
+            } else { 0 };
+            total_damage += cmp::min(damage, 0);
+            false
+        });
+
+        log::debug!("{name} damaged by {total_damage}");
+
+        if total_damage > health.0 {
+            health.0 = 0;
+        } else {
+            health.0 -= total_damage;
+        }
+
+        log::debug!("{name} health is {}", health.0);
+
+        if health.0 == 0 {
+            commands.entity(entity).despawn();
+            log::debug!("{name} is dead");
         }
     }
 }

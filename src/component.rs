@@ -42,31 +42,28 @@ pub struct Player;
 // Бандл из компонентов игрока
 #[derive(Debug, Bundle)]
 pub struct PlayerBundle {
+    pub creature_bundle: CreatureBundle,
     pub player: Player,
-    pub position: Position,
-    pub viewshed: Viewshed,
     pub revealed_map: RevealedMap,
     pub player_command: PlayerCommand,
-    pub max_health: MaxHelth,
-    pub health: Health,
-    pub defence: Defence,
-    pub power: Power,
 }
 
 impl PlayerBundle {
     pub fn new(position: Position, viewshed_range: u32, revealed_map: RevealedMap) -> Self {
-        let viewshed = Viewshed::new(viewshed_range);
+        let creature_bundle = CreatureBundle::new(
+            "Player".to_string(),
+            position,
+            viewshed_range,
+            30,
+            1_000,
+            5
+        );
 
         Self {
+            creature_bundle,
             player: Player,
-            position,
-            viewshed,
             revealed_map,
             player_command: PlayerCommand::default(),
-            max_health: MaxHelth(30),
-            health: Health(30),
-            defence: Defence(2),
-            power: Power(5)
         }
     }
 }
@@ -91,37 +88,31 @@ impl Enemy {
 // Бандл из компонентов игрока
 #[derive(Debug, Bundle)]
 pub struct EnemyBundle {
+    pub creature_bundle: CreatureBundle,
     pub enemy: Enemy,
-    pub name: Name,
-    pub position: Position,
-    pub viewshed: Viewshed,
     pub blocks_tile: BlocksTile,
-    pub max_health: MaxHelth,
-    pub health: Health,
-    pub defence: Defence,
-    pub power: Power
 }
 
 impl EnemyBundle {
     pub fn new(enemy: Enemy, position: Position, viewshed_range: u32) -> Self {
-        let viewshed = Viewshed::new(viewshed_range);
-        let name = Name(enemy.name());
+        let creature_bundle = CreatureBundle::new(
+            enemy.name(),
+            position,
+            viewshed_range,
+            16,
+            1,
+            4
+        );
 
         Self {
+            creature_bundle,
             enemy,
-            position,
-            viewshed,
-            name,
             blocks_tile: BlocksTile,
-            max_health: MaxHelth(16),
-            health: Health(16),
-            defence: Defence(1),
-            power: Power(4)
         }
     }
 
     pub fn with_name(mut self, name: Name) -> Self {
-        self.name = name;
+        self.creature_bundle.name = name;
         self
     }
 }
@@ -154,3 +145,70 @@ pub struct Defence(pub u32);
 
 #[derive(Debug, Component)]
 pub struct Power(pub u32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Component)]
+pub enum CreatureIntention {
+    #[default]
+    Nothing,
+    Move(UVec2),
+    Attack(UVec2),
+}
+
+impl CreatureIntention {
+    pub fn is_move(&self) -> bool {
+        match self {
+            Self::Move(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_attack(&self) -> bool {
+        match self {
+            Self::Attack(_) => true,
+            _ => false
+        }
+    }
+}
+
+#[derive(Debug, Bundle)]
+pub struct CreatureBundle {
+    pub name: Name,
+    pub position: Position,
+    pub viewshed: Viewshed,
+    pub max_health: MaxHelth,
+    pub health: Health,
+    pub defence: Defence,
+    pub power: Power,
+    pub creature_intention: CreatureIntention,
+    pub damages: Damages,
+}
+
+impl CreatureBundle {
+    pub fn new(
+        name: String,
+        position: Position,
+        viewshed_range: u32,
+        max_health: u32,
+        defence: u32,
+        power: u32
+    ) -> Self {
+        let name = Name(name);
+        let viewshed = Viewshed::new(viewshed_range);
+
+        Self {
+            name,
+            position,
+            viewshed,
+            max_health: MaxHelth(max_health),
+            health: Health(max_health),
+            defence: Defence(defence),
+            power: Power(power),
+            creature_intention: CreatureIntention::default(),
+            damages: Damages::default(),
+        }
+    }
+}
+
+// Грязный дамаг
+#[derive(Debug, Default, Component)]
+pub struct Damages(pub Vec<u32>);

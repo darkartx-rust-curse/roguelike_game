@@ -6,38 +6,41 @@ use crate::{
 };
 
 pub(super) fn enemy_ai(
-    mut map: Query<&mut Map>,
-    enemies: Query<(&mut Position, &Enemy, &Name, &Viewshed)>,
+    map: Query<&Map>,
+    enemies: Query<(&Position, &mut CreatureIntention, &Name, &Viewshed), With<Enemy>>,
     player: Query<&Position, (With<Player>, Without<Enemy>)>
 ) {
-    let mut map = match map.single_mut() {
+    let map = match map.single() {
         Ok(map) => map,
         _ => return,
     };
 
-    for (mut position, _enemy, name, viewshed) in enemies {
+    for (position, mut intension, name, viewshed) in enemies {
         let near_player = player.iter()
             .find(|position| viewshed.visible_tiles().contains(&position.0));
+
+        let current_position = position.0.as_vec2();
 
         if let Some(player) = near_player {
             log::debug!("{} see player", name.0);
 
-            if position.0.as_vec2().distance(player.0.as_vec2()) <= 1.5 {
-                log::debug!("{} insults player", name.0);
-                continue;
-            }
+            let player_position = player.0.as_vec2();
 
-            let pathfinder = Pathfinder::new(&map);
-            let path_to_player = pathfinder.find_path(position.0, player.0);
+            if current_position.distance(player_position) <= 1.5 {
+                *intension = CreatureIntention::Attack(player.0)
+            } else {
+                let pathfinder = Pathfinder::new(&map);
+                let path_to_player = pathfinder
+                    .find_path(position.0, player.0);
 
-            let move_position = match path_to_player {
-                Some(path) => path.into_iter().skip(1).next(),
-                _ => None
-            };
+                let target_position = match path_to_player {
+                    Some(path) => path.into_iter().skip(1).next(),
+                    _ => None
+                };
 
-            if let Some(move_position) = move_position {
-                map.set_blocked(move_position, true);
-                position.0 = move_position;
+                if let Some(move_position) = target_position {
+                    *intension = CreatureIntention::Move(move_position);
+                }
             }
         }
     }

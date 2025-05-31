@@ -27,26 +27,26 @@ pub(super) fn player_input(
                 KeyCode::ArrowDown => MoveDown,
                 KeyCode::ArrowLeft => MoveLeft,
                 KeyCode::ArrowUp => MoveUp,
-                _ => PlayerCommand::None
+                _ => None
             }
             MoveRight => match key {
-                KeyCode::ArrowDown => PlayerCommand::MoveDownRight,
-                KeyCode::ArrowUp => PlayerCommand::MoveUpRight,
+                KeyCode::ArrowDown => MoveDownRight,
+                KeyCode::ArrowUp => MoveUpRight,
                 _ => new_player_command
             }
             MoveDown => match key {
-                KeyCode::ArrowRight => PlayerCommand::MoveDownRight,
-                KeyCode::ArrowLeft => PlayerCommand::MoveDownLeft,
+                KeyCode::ArrowRight => MoveDownRight,
+                KeyCode::ArrowLeft => MoveDownLeft,
                 _ => new_player_command
             },
             MoveLeft => match key {
-                KeyCode::ArrowDown => PlayerCommand::MoveDownLeft,
-                KeyCode::ArrowUp => PlayerCommand::MoveUpLeft,
+                KeyCode::ArrowDown => MoveDownLeft,
+                KeyCode::ArrowUp => MoveUpLeft,
                 _ => new_player_command
             },
             MoveUp => match key {
-                KeyCode::ArrowRight => PlayerCommand::MoveUpRight,
-                KeyCode::ArrowLeft => PlayerCommand::MoveUpLeft,
+                KeyCode::ArrowRight => MoveUpRight,
+                KeyCode::ArrowLeft => MoveUpLeft,
                 _ => new_player_command
             },
             _ => new_player_command

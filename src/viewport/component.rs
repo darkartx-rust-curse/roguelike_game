@@ -1,3 +1,4 @@
+use bevy::prelude::Component;
 use bevy_ascii_terminal::{color::*,Tile};
 
 use crate::{
@@ -6,6 +7,9 @@ use crate::{
 };
 
 use super::color;
+
+#[derive(Component)]
+pub(super) struct ViewportTerminal;
 
 pub trait ToTile {
     fn to_tile(&self, visible: bool) -> Tile;

@@ -6,9 +6,9 @@ use crate::{
     map::{Map, Viewshed, RevealedMap}
 };
 
-use super::tile::*;
+use super::component::*;
 
-pub(super) fn clear(mut terminal: Query<&mut Terminal>) {
+pub(super) fn clear(mut terminal: Query<&mut Terminal, With<ViewportTerminal>>) {
     let mut terminal = match terminal.single_mut() {
         Ok(terminal) => terminal,
         _ => { return }
@@ -17,8 +17,8 @@ pub(super) fn clear(mut terminal: Query<&mut Terminal>) {
     terminal.clear();
 }
 
-pub(super) fn render_map(
-    mut terminal: Query<&mut Terminal>,
+pub(super) fn draw_map(
+    mut terminal: Query<&mut Terminal, With<ViewportTerminal>>,
     map: Query<&Map>,
     player_map: Query<(&Viewshed, &RevealedMap), With<Player>>
 ) {
@@ -51,7 +51,10 @@ pub(super) fn render_map(
     }
 }
 
-pub(super) fn render_player(mut terminal: Query<&mut Terminal>, player: Query<(&Player, &Position)>) {
+pub(super) fn draw_player(
+    mut terminal: Query<&mut Terminal, With<ViewportTerminal>>,
+    player: Query<(&Player, &Position)>
+) {
     let mut terminal = match terminal.single_mut() {
         Ok(terminal) => terminal,
         _ => { return }
@@ -65,8 +68,8 @@ pub(super) fn render_player(mut terminal: Query<&mut Terminal>, player: Query<(&
 }
 
 // Рендерим монстров только тех, которых видим
-pub(super) fn render_enemies(
-    mut terminal: Query<&mut Terminal>,
+pub(super) fn draw_enemies(
+    mut terminal: Query<&mut Terminal, With<ViewportTerminal>>,
     enemies: Query<(&Enemy, &Position)>,
     player_viewshed: Query<&Viewshed, With<Player>>
 ) {

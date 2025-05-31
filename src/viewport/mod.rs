@@ -1,6 +1,6 @@
 pub mod plugin;
-pub mod tile;
 mod system;
 mod color;
+mod component;
 
 pub use plugin::*;

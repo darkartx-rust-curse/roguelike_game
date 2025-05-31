@@ -1,4 +1,4 @@
-use bevy::prelude::{Bundle, Component, UVec2};
+use bevy::prelude::*;
 
 pub use crate::map::{Map, Viewshed, RevealedMap};
 
@@ -55,7 +55,7 @@ impl PlayerBundle {
             position,
             viewshed_range,
             30,
-            1_000,
+            2,
             5
         );
 
@@ -211,4 +211,38 @@ impl CreatureBundle {
 
 // Грязный дамаг
 #[derive(Debug, Default, Component)]
-pub struct Damages(pub Vec<u32>);
+pub struct Damages(Vec<Damage>);
+
+impl Damages {
+    pub fn items(&self) -> &[Damage] {
+        &self.0
+    }
+
+    pub fn add_damage(&mut self, damage: Damage) {
+        self.0.push(damage);
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Damage {
+    pub value: u32,
+    pub cause: DamageCause
+}
+
+impl Damage {
+    pub fn new(value: u32, cause: DamageCause) -> Self {
+        Self {
+            value,
+            cause
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum DamageCause {
+    Creature(Option<String>)
+}

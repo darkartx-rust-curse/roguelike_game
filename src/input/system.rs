@@ -1,11 +1,22 @@
 use bevy::prelude::*;
 
-use crate::component::PlayerCommand;
+use crate::{component::PlayerCommand, resource::TurnState};
+use super::resource::*;
 
 pub(super) fn player_input(
+    time: Res<Time>,
     keyboard_input: ResMut<ButtonInput<KeyCode>>,
-    mut player_command: Query<&mut PlayerCommand>
+    mut player_command: Query<&mut PlayerCommand>,
+    mut input_delay_timer: ResMut<InputDelayTimer>,
+    turn_state: Res<State<TurnState>>,
+    mut next_turn_state: ResMut<NextState<TurnState>>
 ) {
+    input_delay_timer.0.tick(time.delta());
+
+    if !input_delay_timer.0.finished() {
+        return;
+    }
+
     let mut player_command = match player_command.single_mut() {
         Ok(player_command) => player_command,
         _ => return,
@@ -19,7 +30,7 @@ pub(super) fn player_input(
     };
 
     for key in keyboard_input.get_pressed() {
-        // log::debug!("Key pressed: {key:?}");
+        log::debug!("Key pressed: {key:?}");
 
         new_player_command = match new_player_command {
             None => match key {
@@ -53,5 +64,8 @@ pub(super) fn player_input(
         }; 
     }
 
-    *player_command = new_player_command;
+    if *player_command != new_player_command {
+        *player_command = new_player_command;
+        next_turn_state.set(turn_state.next());
+    }
 }

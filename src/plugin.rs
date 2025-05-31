@@ -10,7 +10,6 @@ impl BevyPlugin for Plugin {
 
         app
             .insert_resource(DiceBox::default())
-            .insert_resource(TurnTimer::new(config.turn_time_secs))
             .insert_resource(config)
             .init_resource::<GameLog>()
             .init_state::<TurnState>()

@@ -1,4 +1,4 @@
-use std::{time, fmt};
+use std::fmt;
 
 use bevy::prelude::*;
 
@@ -8,7 +8,6 @@ pub use crate::random::*;
 pub struct Config {
     pub map_width: u32,
     pub map_height: u32,
-    pub turn_time_secs: f32,
     pub viewshed_range: u32,
 }
 
@@ -17,7 +16,6 @@ impl Default for Config {
         Self {
             map_width: 80,
             map_height: 42,
-            turn_time_secs: 0.1,
             viewshed_range: 8,
         }
     }
@@ -42,29 +40,6 @@ impl TurnState {
             Self::EnemyTurn => Self::EndTurn,
             Self::EndTurn => Self::EndTurn,
         }
-    }
-}
-
-#[derive(Debug, Clone, Resource)]
-pub(super) struct TurnTimer(Timer);
-
-impl TurnTimer {
-    pub fn new(turn_max_time: f32) -> Self {
-        let timer = Timer::from_seconds(turn_max_time, TimerMode::Once);
-
-        Self(timer)
-    }
-
-    pub fn tick(&mut self, delta: time::Duration) {
-        self.0.tick(delta);
-    }
-
-    pub fn finished(&self) -> bool {
-        self.0.finished()
-    }
-
-    pub fn reset(&mut self) {
-        self.0.reset();
     }
 }
 

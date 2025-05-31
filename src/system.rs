@@ -72,28 +72,13 @@ pub(super) fn spawn_enemies(
 }
 
 pub(super) fn turn_system(
-    time: Res<Time>,
-    mut turn_timer: ResMut<TurnTimer>,
     turn_state: Res<State<TurnState>>,
     mut next_turn_state: ResMut<NextState<TurnState>>
 ) {
-    turn_timer.tick(time.delta());
-    let turn_state = *turn_state.get();
-
-    let next_turn = match turn_state {
+    let next_turn = match turn_state.get() {
         TurnState::Setup => None,
-        TurnState::StartTurn => {
-            turn_timer.reset();
-            Some(turn_state.next())
-        }
-        TurnState::PlayerTurn => {
-            if turn_timer.finished() {
-                turn_timer.reset();
-                Some(turn_state.next())
-            } else {
-                None
-            }
-        },
+        TurnState::StartTurn => Some(turn_state.next()),
+        TurnState::PlayerTurn => None,
         TurnState::EnemyTurn => Some(turn_state.next()),
         TurnState::EndTurn => Some(TurnState::StartTurn),
     };

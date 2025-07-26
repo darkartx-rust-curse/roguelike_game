@@ -1,8 +1,8 @@
 use bevy::prelude::{*, Plugin as BevyPlugin};
-use bevy_ascii_terminal::{color::BLACK, *};
+use bevy_ascii_terminal::*;
 
 use crate::resource::*;
-use super::{UI_SIZE, system::*, component::*};
+use super::{constants::*, system::*, component::*};
 
 pub struct Plugin;
 
@@ -16,7 +16,7 @@ impl BevyPlugin for Plugin {
 }
 
 fn setup(mut commands: Commands, config: Res<Config>) {
-    let ui_size = [config.map_width - 2, UI_SIZE - 2];
+    let ui_size = [config.map_width - 2, UI_SIZE as u32 - 2];
     let terminal = Terminal::new(ui_size);
 
     commands.spawn((

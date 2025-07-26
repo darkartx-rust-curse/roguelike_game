@@ -1,7 +1,6 @@
 pub mod plugin;
 mod system;
 mod component;
+mod constants;
 
 pub use plugin::*;
-
-const UI_SIZE: u32 = 8;

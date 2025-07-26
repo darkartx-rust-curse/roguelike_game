@@ -1,3 +1,5 @@
+use std::iter;
+
 use bevy::prelude::{Query, With, Res};
 use bevy_ascii_terminal::{border::BorderSide, *};
 
@@ -6,7 +8,7 @@ use crate::{
     resource::{GameLog}
 };
 
-use super::component::*;
+use super::{component::*, constants::*};
 
 pub(super) fn clear(mut terminal: Query<&mut Terminal, With<UiTerminal>>) {
     let mut terminal = match terminal.single_mut() {
@@ -29,9 +31,13 @@ pub(super) fn draw_player_stats(
     terminal_border.clear_strings();
 
     if let Ok((health, max_health)) = health.single() {
-        let hp_string = format!("HP {} / {}", health.0, max_health.0);
+        let health = health.0;
+        let max_health = max_health.0;
+        let hp_string = format!("HP {} / {}", health, max_health);
+        terminal_border.put_string(BorderSide::Top, 0.05, 0, hp_string);
 
-        terminal_border.put_string( BorderSide::Top, 1.0, 0, hp_string);
+        let healthbar_string = calc_healthbar(health, max_health).fg(HEALTHBAR_COLOR);
+        terminal_border.put_string(BorderSide::Top, 1.0, 0, healthbar_string);
     }
 }
 
@@ -55,4 +61,16 @@ pub(super) fn draw_game_log(
 
         terminal.put_string([0, log_max_count - i - 1], log_entry.to_string());
     }
+}
+
+fn calc_healthbar(health: u32, max_health: u32) -> String {
+    if max_health == 0 {
+        return "".into()
+    }
+
+    let full_size = (HEALTHBAR_SIZE as f64 / max_health as f64 * health as f64).trunc() as usize;
+
+    iter::repeat(HEALTHBAR_FULL_GLYPH).take(full_size).chain(
+        iter::repeat(HEALTHBAR_EMPTY_GLYPH).take(HEALTHBAR_SIZE - full_size)
+    ).collect()
 }

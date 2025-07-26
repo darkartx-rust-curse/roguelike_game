@@ -33,10 +33,12 @@ pub(super) fn draw_player_stats(
     if let Ok((health, max_health)) = health.single() {
         let health = health.0;
         let max_health = max_health.0;
-        let hp_string = format!("HP {} / {}", health, max_health);
+        let hp_string = format!("HP {} / {}", health, max_health)
+            .fg(HP_STRING_COLOR);
         terminal_border.put_string(BorderSide::Top, 0.05, 0, hp_string);
 
-        let healthbar_string = calc_healthbar(health, max_health).fg(HEALTHBAR_COLOR);
+        let healthbar_string = calc_healthbar(health, max_health)
+            .fg(HEALTHBAR_COLOR);
         terminal_border.put_string(BorderSide::Top, 1.0, 0, healthbar_string);
     }
 }

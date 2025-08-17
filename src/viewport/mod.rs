@@ -1,6 +1,6 @@
 pub mod plugin;
 mod system;
-mod color;
+mod constants;
 mod component;
 
 pub use plugin::*;

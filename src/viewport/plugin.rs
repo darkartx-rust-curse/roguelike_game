@@ -10,7 +10,13 @@ impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Startup, setup)
-            .add_systems(Update, (clear, draw_map, draw_enemies, draw_player).chain())
+            .add_systems(
+                Update, 
+                (
+                    cursor_position,
+                    (clear, draw_map, draw_enemies, draw_player, draw_cursor, draw_tooltip).chain()
+                )
+            )
         ;
     }
 }
@@ -22,6 +28,8 @@ fn setup(mut commands: Commands, config: Res<Config>) {
     let terminal = Terminal::new(viewpoer_size)
         .with_clear_tile(clear_tile);
 
-    commands.spawn((terminal, TerminalMeshPivot::BottomCenter, ViewportTerminal));
+    let cursor = Cursor::default();
+
+    commands.spawn((terminal, TerminalMeshPivot::BottomCenter, cursor, ViewportTerminal));
 }
 

@@ -55,7 +55,7 @@ impl PlayerBundle {
             position,
             viewshed_range,
             30,
-            2,
+            100,
             5
         );
 

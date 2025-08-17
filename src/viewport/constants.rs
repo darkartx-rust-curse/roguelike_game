@@ -1,5 +1,5 @@
 use bevy::color::LinearRgba;
-use bevy_ascii_terminal::color::{hex_color, BLACK, RED};
+use bevy_ascii_terminal::color::{hex_color, BLACK, RED, MAGENTA, WHITE, GRAY};
 
 pub(super) const MAP_TILE_WALL_FG: LinearRgba = hex_color(0x101010);
 pub(super) const MAP_TILE_WALL_BG: LinearRgba = BLACK;
@@ -13,3 +13,6 @@ pub(super) const PLAYER_FG: LinearRgba = hex_color(0xffff00);
 pub(super) const PLAYER_BG: LinearRgba = BLACK;
 pub(super) const ENEMY_FG: LinearRgba = RED;
 pub(super) const ENEMY_BG: LinearRgba = BLACK;
+pub(super) const CURSOR_COLOR: LinearRgba = MAGENTA;
+pub(super) const TOOLTIP_FG: LinearRgba = WHITE;
+pub(super) const TOOLTIP_BG: LinearRgba = GRAY;

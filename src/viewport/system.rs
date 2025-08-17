@@ -1,12 +1,12 @@
-use bevy::prelude::{Query, With};
-use bevy_ascii_terminal::Terminal;
+use bevy::prelude::*;
+use bevy_ascii_terminal::*;
 
 use crate::{
-    component::{Player, Position, Enemy},
+    component::{Player, Position, Enemy, Name},
     map::{Map, Viewshed, RevealedMap}
 };
 
-use super::component::*;
+use super::{component::*, constants::*};
 
 pub(super) fn clear(mut terminal: Query<&mut Terminal, With<ViewportTerminal>>) {
     let mut terminal = match terminal.single_mut() {
@@ -92,3 +92,111 @@ pub(super) fn draw_enemies(
         terminal.put_tile(position.0, tile);
     }
 }
+
+pub(super) fn cursor_position(
+    mut cursor: Query<(&mut Cursor, &TerminalTransform), With<ViewportTerminal>>,
+    camera: Query<&TerminalCamera>
+) {
+    let Ok(camera) = camera.single() else {
+        return
+    };
+
+    let Ok((mut cursor, transform)) = cursor.single_mut() else {
+        return
+    };
+
+    let Some(cursor_position) = camera.cursor_world_pos() else {
+        return
+    };
+
+    if let Some(cursor_position) = transform.world_to_tile(cursor_position) {
+        cursor.show_at(cursor_position.as_uvec2());
+    } else {
+        cursor.hide();
+    }
+}
+
+pub(super) fn draw_cursor(
+    mut terminal: Query<(&mut Terminal, &Cursor), With<ViewportTerminal>>,
+) {
+    let Ok((mut terminal, cursor)) = terminal.single_mut() else {
+        return
+    };
+
+    if !cursor.show {
+        return
+    }
+
+    terminal.put_bg_color(cursor.position, CURSOR_COLOR);
+}
+
+pub(super) fn draw_tooltip(
+    mut terminal: Query<(&mut Terminal, &Cursor), With<ViewportTerminal>>,
+    entities: Query<(&Name, &Position)>,
+    player_viewshed: Query<&Viewshed, With<Player>>
+) {
+    let Ok((mut terminal, cursor)) = terminal.single_mut() else {
+        return
+    };
+
+    if !cursor.show {
+        return
+    }
+
+    let Ok(player_viewshed) = player_viewshed.single() else {
+        return
+    };
+
+    let mut tooltip: Vec<&String> = Vec::new();
+
+    for (name, position) in entities {
+        if !player_viewshed.visible_tiles().contains(&position.0) ||
+            cursor.position != position.0 {
+            continue;
+        }
+
+        tooltip.push(&name.0);
+    }
+
+    if tooltip.is_empty() {
+        return
+    }
+
+    let width = tooltip.iter().map(|i| i.len()).max().unwrap() as u32 + 3;
+
+    let is_left = cursor.position.x > width + 5;
+
+    let x = if is_left {
+        cursor.position.x - width
+    } else {
+        cursor.position.x + 1
+    };
+    let mut y = cursor.position.y;
+    let mut first = true;
+
+    for s in tooltip {
+        let s = if first {
+            first = false;
+            if is_left {
+                format!("{s} ->")
+            } else {
+                format!("<- {s}")
+            }
+        } else {
+            if is_left {
+                format!("{s}   ")
+            } else {
+                format!("   {s}")
+            }
+        };
+
+        terminal.put_string(
+            [x, y].pivot(Pivot::BottomLeft),
+            s.bg(TOOLTIP_BG).fg(TOOLTIP_FG)
+        );
+
+        y += 1;
+    }
+}
+
+

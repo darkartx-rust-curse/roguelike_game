@@ -1,4 +1,4 @@
-use bevy::prelude::Component;
+use bevy::prelude::*;
 use bevy_ascii_terminal::{color::*,Tile};
 
 use crate::{
@@ -6,7 +6,7 @@ use crate::{
     map::MapTile
 };
 
-use super::color;
+use super::constants;
 
 #[derive(Component)]
 pub(super) struct ViewportTerminal;
@@ -19,8 +19,8 @@ impl ToTile for Player {
     fn to_tile(&self, _visible: bool) -> Tile {
         Tile {
             glyph: '@',
-            fg_color: color::PLAYER_FG,
-            bg_color: color::PLAYER_BG,
+            fg_color: constants::PLAYER_FG,
+            bg_color: constants::PLAYER_BG,
         }
     }
 }
@@ -31,16 +31,16 @@ impl ToTile for MapTile {
             MapTile::Void => Tile::new(' ', BLACK, BLACK),
             MapTile::Floor => {
                 if visible {
-                    Tile::new('.', color::MAP_TILE_FLOOR_VISIBLE_FG, color::MAP_TILE_FLOOR_VISIBLE_BG)
+                    Tile::new('.', constants::MAP_TILE_FLOOR_VISIBLE_FG, constants::MAP_TILE_FLOOR_VISIBLE_BG)
                 } else {
-                    Tile::new('.', color::MAP_TILE_FLOOR_FG, color::MAP_TILE_FLOOR_BG)
+                    Tile::new('.', constants::MAP_TILE_FLOOR_FG, constants::MAP_TILE_FLOOR_BG)
                 }
             }
             MapTile::Wall => {
                 if visible {
-                    Tile::new('#', color::MAP_TILE_WALL_VISIBLE_FG, color::MAP_TILE_WALL_VISIBLE_BG)
+                    Tile::new('#', constants::MAP_TILE_WALL_VISIBLE_FG, constants::MAP_TILE_WALL_VISIBLE_BG)
                 } else {
-                    Tile::new('#', color::MAP_TILE_WALL_FG, color::MAP_TILE_WALL_BG)
+                    Tile::new('#', constants::MAP_TILE_WALL_FG, constants::MAP_TILE_WALL_BG)
                 }
             }
         }
@@ -53,8 +53,35 @@ impl ToTile for Enemy {
 
         Tile::new(
             glyph,
-            color::ENEMY_FG,
-            color::ENEMY_BG
+            constants::ENEMY_FG,
+            constants::ENEMY_BG
         )
+    }
+}
+
+#[derive(Debug, Component)]
+pub(super) struct Cursor {
+    pub position: UVec2,
+    pub show: bool
+}
+
+impl Default for Cursor {
+    fn default() -> Self {
+        Self {
+            position: UVec2::default(),
+            show: true
+        }
+    }
+}
+
+impl Cursor {
+    pub(super) fn hide(&mut self) {
+        self.position = UVec2::default();
+        self.show = false;
+    }
+
+    pub(super) fn show_at(&mut self, position: UVec2) {
+        self.position = position;
+        self.show = true;
     }
 }

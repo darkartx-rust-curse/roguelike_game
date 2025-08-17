@@ -38,6 +38,7 @@ pub(super) fn player_input(
                 KeyCode::ArrowDown => MoveDown,
                 KeyCode::ArrowLeft => MoveLeft,
                 KeyCode::ArrowUp => MoveUp,
+                KeyCode::KeyG => GrabItem,
                 _ => None
             }
             MoveRight => match key {

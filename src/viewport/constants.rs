@@ -16,3 +16,5 @@ pub(super) const ENEMY_BG: LinearRgba = BLACK;
 pub(super) const CURSOR_COLOR: LinearRgba = MAGENTA;
 pub(super) const TOOLTIP_FG: LinearRgba = WHITE;
 pub(super) const TOOLTIP_BG: LinearRgba = GRAY;
+pub(super) const POTION_FG: LinearRgba = MAGENTA;
+pub(super) const POTION_BG: LinearRgba = BLACK;

@@ -73,6 +73,11 @@ impl Generator for DungeonGenerator<'_> {
             map.monster_spawn_points_mut().push(room.center());
         }
 
+        for room in rooms {
+            let area = room.inflate(-1);
+            map.areas_mut().push(area);
+        }
+
         map
     }
 }

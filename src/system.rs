@@ -4,7 +4,8 @@ use crate::{
     event::*,
     component::{*, Name},
     map::{Map, generator::*},
-    resource::*
+    resource::*,
+    spawner
 };
 
 pub(super) fn setup_game(mut game_log: ResMut<GameLog>) {
@@ -55,19 +56,28 @@ pub(super) fn spawn_enemies(
     mut rnd: ResMut<DiceBox>,
     config: Res<Config>
 ) {
-    let map = match map.single() {
-        Ok(map) => map,
-        _ => return,
+    let Ok(map) = map.single() else {
+        return
     };
 
     for position in map.monster_spawn_points() {
-        let enemy = enemy_randomizer(rnd.as_mut());
+        let enemy = spawner::spawn_monster(&mut commands, &mut rnd, &config, *position);
+        enemy_spawned_event.write(EnemySpawnedEvent(enemy.id()));
+    }
+}
 
-        let entity = commands.spawn(
-            EnemyBundle::new(enemy, position.into(), config.viewshed_range)
-        );
+// Спавн лута
+pub(super) fn spawn_items(
+    mut commands: Commands,
+    map: Query<&Map>,
+    mut rnd: ResMut<DiceBox>
+) {
+    let Ok(map) = map.single() else {
+        return
+    };
 
-        enemy_spawned_event.write(EnemySpawnedEvent(entity.id()));
+    for area in map.areas() {
+        spawner::spawn_item(&mut commands, &mut rnd, *area);
     }
 }
 
@@ -93,8 +103,10 @@ pub(super) fn start_turn(mut next_turn_state: ResMut<NextState<TurnState>>) {
 }
 
 pub(super) fn process_player_commands(
+    mut commands: Commands,
     player_commands: Query<(Entity, &mut PlayerCommand, &mut CreatureIntention)>,
-    targets: Query<(Entity, &Position), With<Health>>
+    targets: Query<(Entity, &Position), (With<Health>, Without<Item>)>,
+    items: Query<(Entity, &Position), With<Item>>
 ) {
     use PlayerCommand::*;
 
@@ -104,30 +116,47 @@ pub(super) fn process_player_commands(
             Some((_, position)) => position,
             _ => continue
         };
-        let mut player_delta = IVec2::ZERO;
 
         match player_command.as_ref() {
-            MoveUp | MoveUpLeft | MoveUpRight => { player_delta.y += 1; }
-            MoveDown | MoveDownLeft | MoveDownRight => { player_delta.y -= 1; }
-            _ => { }
-        }
+            GrabItem => {
+                let item_to_grab = items.iter()
+                    .find(|(_, item_position)| **item_position == *position)
+                    .map(|(item_entity, _)| item_entity);
 
-        match player_command.as_ref() {
-            MoveRight | MoveDownRight | MoveUpRight => { player_delta.x += 1; }
-            MoveLeft | MoveDownLeft | MoveUpLeft => { player_delta.x -= 1; }
-            _ => { }
-        }
+                if let Some(item) = item_to_grab {
+                    commands.spawn(WantsToPickupItem {
+                        collected_by: entity,
+                        item,
+                    });
+                }
+            },
+            _ => {
+                let mut player_delta = IVec2::ZERO;
 
-        if player_delta != IVec2::ZERO {
-            let target_position = (position.0.as_ivec2() + player_delta).as_uvec2();
-            let is_target = targets.iter()
-                .any(|(_, position)| position.0 == target_position);
+                match player_command.as_ref() {
+                    MoveUp | MoveUpLeft | MoveUpRight => { player_delta.y += 1; }
+                    MoveDown | MoveDownLeft | MoveDownRight => { player_delta.y -= 1; }
+                    _ => { }
+                }
 
-            *creature_intention = if is_target {
-                CreatureIntention::Attack(target_position)
-            } else {
-                CreatureIntention::Move(target_position)
-            };
+                match player_command.as_ref() {
+                    MoveRight | MoveDownRight | MoveUpRight => { player_delta.x += 1; }
+                    MoveLeft | MoveDownLeft | MoveUpLeft => { player_delta.x -= 1; }
+                    _ => { }
+                }
+
+                if player_delta != IVec2::ZERO {
+                    let target_position = (position.0.as_ivec2() + player_delta).as_uvec2();
+                    let is_target = targets.iter()
+                        .any(|(_, position)| position.0 == target_position);
+
+                    *creature_intention = if is_target {
+                        CreatureIntention::Attack(target_position)
+                    } else {
+                        CreatureIntention::Move(target_position)
+                    };
+                }
+            }
         }
 
         *player_command = PlayerCommand::default();
@@ -260,15 +289,5 @@ pub(super) fn damage_system(
             game_log.add_entry(GameLogEntry::Dead(name));
             commands.entity(entity).despawn();
         }
-    }
-}
-
-fn enemy_randomizer(rnd: &mut DiceBox) -> Enemy {
-    let n = rnd.roll_dice(1, u8::MAX as i32);
-
-    match n % 2 {
-        0 => Enemy::Goblin,
-        1 => Enemy::Orc,
-        _ => unreachable!()
     }
 }

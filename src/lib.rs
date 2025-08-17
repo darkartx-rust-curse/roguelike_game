@@ -10,6 +10,9 @@ pub mod plugin;
 pub mod ui;
 pub mod renderer;
 mod system;
+mod constants;
+mod spawner;
+mod inventory_system;
 
 use bevy::prelude::{App, Plugin as BevyPlugin};
 

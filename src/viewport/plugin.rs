@@ -14,7 +14,15 @@ impl BevyPlugin for Plugin {
                 Update, 
                 (
                     cursor_position,
-                    (clear, draw_map, draw_enemies, draw_player, draw_cursor, draw_tooltip).chain()
+                    (
+                        clear,
+                        draw_map,
+                        draw_enemies,
+                        draw_potions,
+                        draw_player,
+                        draw_cursor,
+                        draw_tooltip
+                    ).chain()
                 )
             )
         ;

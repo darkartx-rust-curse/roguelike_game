@@ -18,6 +18,7 @@ pub struct Map {
     tiles: Vec<MapTile>,
     player_spawn_point: UVec2,
     monster_spawn_points: Vec<UVec2>,
+    areas: Vec<URect>,
     blocking: Vec<bool>
 }
 
@@ -74,12 +75,14 @@ impl Map {
         assert_eq!(tiles.len(), (size.x * size.y) as usize, "Map size not equal tiles size");
 
         let blocking = vec![false; tiles.len()];
+        let areas = vec![];
 
         Self {
             size,
             tiles,
             player_spawn_point: UVec2::ZERO,
             monster_spawn_points: Vec::new(),
+            areas,
             blocking
         }
     }
@@ -157,6 +160,14 @@ impl Map {
 
     pub fn monster_spawn_points_mut(&mut self) -> &mut Vec<UVec2> {
         &mut self.monster_spawn_points
+    }
+
+    pub fn areas(&self) -> &[URect] {
+        &self.areas
+    }
+
+    pub fn areas_mut(&mut self) -> &mut Vec<URect> {
+        &mut self.areas
     }
 
     pub fn make_revealed_map(&self) -> RevealedMap {

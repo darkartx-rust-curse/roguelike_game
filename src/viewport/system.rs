@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ascii_terminal::*;
 
 use crate::{
-    component::{Player, Position, Enemy, Name},
+    component::{Player, Position, Enemy, Name, Potion},
     map::{Map, Viewshed, RevealedMap}
 };
 
@@ -46,7 +46,7 @@ pub(super) fn draw_map(
                 player_revealed_map.tile(position)
             };
 
-            terminal.put_tile(position, map_tile.to_tile(visible));
+            terminal.put_tile(position, (map_tile, visible).to_tile());
         }
     }
 }
@@ -61,7 +61,7 @@ pub(super) fn draw_player(
     };
 
     for (player, position) in player {
-        let tile = player.to_tile(true);
+        let tile = player.to_tile();
 
         terminal.put_tile(position.0, tile);
     }
@@ -70,7 +70,7 @@ pub(super) fn draw_player(
 // Рендерим монстров только тех, которых видим
 pub(super) fn draw_enemies(
     mut terminal: Query<&mut Terminal, With<ViewportTerminal>>,
-    enemies: Query<(&Enemy, &Position)>,
+    enemies: Query<(&Name, &Position), With<Enemy>>,
     player_viewshed: Query<&Viewshed, With<Player>>
 ) {
     let mut terminal = match terminal.single_mut() {
@@ -86,8 +86,32 @@ pub(super) fn draw_enemies(
     let enemies = enemies.iter()
         .filter(|(_, position)| player_viewshed.visible_tiles().contains(&position.0));
 
-    for (enemy, position) in enemies {
-        let tile = enemy.to_tile(true);
+    for (name, position) in enemies {
+        let tile = (name, Enemy).to_tile();
+
+        terminal.put_tile(position.0, tile);
+    }
+}
+
+// Рендерим монстров только тех, которых видим
+pub(super) fn draw_potions(
+    mut terminal: Query<&mut Terminal, With<ViewportTerminal>>,
+    potions: Query<(&Potion, &Position)>,
+    player_viewshed: Query<&Viewshed, With<Player>>
+) {
+    let Ok(mut terminal) = terminal.single_mut() else {
+        return
+    };
+
+    let Ok(player_viewshed) = player_viewshed.single() else {
+        return
+    };
+
+    let potions = potions.iter()
+        .filter(|(_, position)| player_viewshed.visible_tiles().contains(&position.0));
+
+    for (potion, position) in potions {
+        let tile = potion.to_tile();
 
         terminal.put_tile(position.0, tile);
     }

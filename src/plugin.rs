@@ -1,6 +1,6 @@
 use bevy::prelude::{*, Plugin as BevyPlugin};
 
-use crate::{resource::*, event::*, system::*};
+use crate::{event::*, inventory_system::*, resource::*, system::*};
 
 pub struct Plugin;
 
@@ -15,8 +15,12 @@ impl BevyPlugin for Plugin {
             .init_state::<TurnState>()
             .add_event::<PlayerSpawnedEvent>()
             .add_event::<EnemySpawnedEvent>()
-            .add_systems(Startup, (setup_game, generate_map, (spawn_player, spawn_enemies, start_turn)).chain())
-            .add_systems(Update, turn_system)
+            .add_systems(Startup, (
+                setup_game,
+                generate_map,
+                (spawn_player, spawn_enemies, spawn_items, start_turn)
+            ).chain())
+            .add_systems(Update, (turn_system, item_collection_system))
             .add_systems(OnExit(TurnState::PlayerTurn), process_player_commands)
             .add_systems(OnEnter(TurnState::EndTurn), (movement_system, combat_system, damage_system).chain())
         ;

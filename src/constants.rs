@@ -1,0 +1,9 @@
+pub(super) const PLAYER_MAX_HP: u32 = 30;
+pub(super) const PLAYER_DEFENCE: u32 = 100;
+pub(super) const PLAYER_POWER: u32 = 5;
+pub(super) const ORC_MAX_HP: u32 = 16;
+pub(super) const ORC_DEFENCE: u32 = 1;
+pub(super) const ORC_POWER: u32 = 4;
+pub(super) const GOBLIN_MAX_HP: u32 = 16;
+pub(super) const GOBLIN_DEFENCE: u32 = 1;
+pub(super) const GOBLIN_POWER: u32 = 4;

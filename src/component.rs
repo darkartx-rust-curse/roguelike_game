@@ -2,9 +2,11 @@ use bevy::prelude::*;
 
 pub use crate::map::{Map, Viewshed, RevealedMap};
 
+use crate::constants::*;
+
 // Компонент указывающий позицию в мире всего что имеет почицию
 // Игрока, Врагов, Тайлы карты
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, PartialEq)]
 pub struct Position(pub UVec2);
 
 impl From<UVec2> for Position {
@@ -54,9 +56,9 @@ impl PlayerBundle {
             "Player".to_string(),
             position,
             viewshed_range,
-            30,
-            100,
-            5
+            PLAYER_MAX_HP,
+            PLAYER_DEFENCE,
+            PLAYER_POWER
         );
 
         Self {
@@ -70,20 +72,7 @@ impl PlayerBundle {
 
 // Компонент врага
 #[derive(Debug, Default, Component)]
-pub enum Enemy {
-    #[default]
-    Goblin,
-    Orc
-}
-
-impl Enemy {
-    pub fn name(&self) -> String {
-        match self {
-            Self::Goblin => "Goblin".to_string(),
-            Self::Orc => "Orc".to_string()
-        }
-    }
-}
+pub struct Enemy;
 
 // Бандл из компонентов игрока
 #[derive(Debug, Bundle)]
@@ -94,19 +83,26 @@ pub struct EnemyBundle {
 }
 
 impl EnemyBundle {
-    pub fn new(enemy: Enemy, position: Position, viewshed_range: u32) -> Self {
+    pub fn new(
+        name: String,
+        position: Position,
+        viewshed_range: u32,
+        max_health: u32,
+        defence: u32,
+        power: u32
+    ) -> Self {
         let creature_bundle = CreatureBundle::new(
-            enemy.name(),
+            name,
             position,
             viewshed_range,
-            16,
-            1,
-            4
+            max_health,
+            defence,
+            power
         );
 
         Self {
             creature_bundle,
-            enemy,
+            enemy: Enemy,
             blocks_tile: BlocksTile,
         }
     }
@@ -114,6 +110,52 @@ impl EnemyBundle {
     pub fn with_name(mut self, name: Name) -> Self {
         self.creature_bundle.name = name;
         self
+    }
+}
+
+// Orc enemy
+#[derive(Debug, Bundle)]
+pub struct OrcBundle {
+    pub enemy_bundle: EnemyBundle
+}
+
+impl OrcBundle {
+    pub fn new(position: Position, viewshed_range: u32) -> Self {
+        let enemy_bundle = EnemyBundle::new(
+            "Orc".to_string(),
+            position,
+            viewshed_range,
+            ORC_MAX_HP,
+            ORC_DEFENCE,
+            ORC_POWER
+        );
+
+        Self {
+            enemy_bundle
+        }
+    }
+}
+
+// Goblin enemy
+#[derive(Debug, Bundle)]
+pub struct GoblinBundle {
+    pub enemy_bundle: EnemyBundle
+}
+
+impl GoblinBundle {
+    pub fn new(position: Position, viewshed_range: u32) -> Self {
+        let enemy_bundle = EnemyBundle::new(
+            "Goblin".to_string(),
+            position,
+            viewshed_range,
+            GOBLIN_MAX_HP,
+            GOBLIN_DEFENCE,
+            GOBLIN_POWER
+        );
+
+        Self {
+            enemy_bundle
+        }
     }
 }
 
@@ -129,6 +171,7 @@ pub enum PlayerCommand {
     MoveUpLeft,
     MoveDownRight,
     MoveDownLeft,
+    GrabItem,
 }
 
 #[derive(Debug, Component)]
@@ -230,14 +273,14 @@ impl Damages {
 #[derive(Debug, Clone)]
 pub struct Damage {
     pub value: u32,
-    pub cause: DamageCause
+    pub cause: DamageCause,
 }
 
 impl Damage {
     pub fn new(value: u32, cause: DamageCause) -> Self {
         Self {
             value,
-            cause
+            cause,
         }
     }
 }
@@ -245,4 +288,53 @@ impl Damage {
 #[derive(Debug, Clone)]
 pub enum DamageCause {
     Creature(Option<String>)
+}
+
+#[derive(Debug, Component, Default)]
+pub struct Item;
+
+#[derive(Debug, Component)]
+pub struct Potion {
+    pub heal_amount: i32,
+}
+
+impl Potion {
+    pub fn new(heal_amount: i32) -> Self {
+        Self {
+            heal_amount
+        }
+    }
+}
+
+#[derive(Debug, Bundle)]
+pub struct PotionBundle {
+    pub name: Name,
+    pub position: Position,
+    pub potion: Potion,
+    pub item: Item,
+}
+
+impl PotionBundle {
+    pub fn new(position: Position) -> Self {
+        let name = Name("Health Potion".to_string());
+        let potion = Potion::new(30);
+
+        Self {
+            name,
+            position,
+            potion,
+            item: Item,
+        }
+    }
+}
+
+#[derive(Debug, Component)]
+pub struct InBackpack {
+    pub owner: Entity,
+}
+
+#[derive(Debug, Component)]
+pub struct WantsToPickupItem {
+    pub collected_by: Entity,
+    pub item: Entity,
 }

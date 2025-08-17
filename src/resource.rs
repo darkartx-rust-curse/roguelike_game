@@ -66,6 +66,7 @@ impl GameLog {
 pub enum GameLogEntry {
     Damage(/* from */String, /* to */String, /* value */u32),
     Dead(String),
+    PickupItem(String),
 }
 
 impl fmt::Display for GameLogEntry {
@@ -76,6 +77,9 @@ impl fmt::Display for GameLogEntry {
             }
             Self::Dead(who) => {
                 write!(f, "{who} dead.")
+            },
+            Self::PickupItem(name) => {
+                write!(f, "You pick up the {}.", name)
             }
         }
     }
